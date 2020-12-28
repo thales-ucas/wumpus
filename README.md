@@ -83,7 +83,7 @@ Wumpus世界的计分说明
 * 如果特工死亡或从山洞出来，游戏就会结束。
 
 
-![surface](docs/assets/surface.png)
+![surface](docs/assets/win.png)
 
 
 环境:
