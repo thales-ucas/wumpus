@@ -13,12 +13,18 @@ LAYOUT = Const()
 布局
 """
 LAYOUT.SCREEN_WIDTH = 500
-LAYOUT.SCREEN_HEIGHT = 400
+LAYOUT.SCREEN_HEIGHT = 600
 LAYOUT.SIZE = 4
 LAYOUT.TERRAIN_X = 50
 LAYOUT.TERRAIN_Y = 20
 LAYOUT.TILE_WIDTH = 100
 LAYOUT.TILE_HEIGHT = 90
+LAYOUT.SCOREBOARD_X = 50
+LAYOUT.SCOREBOARD_Y = 400
+LAYOUT.POPUP_X = 100
+LAYOUT.POPUP_Y = 400
+LAYOUT.POPUP_WIDTH = 300
+LAYOUT.POPUP_HEIGHT = 200
 
 IMAGE = Const()
 """
@@ -30,3 +36,29 @@ IMAGE.HERO = "assets/hero.png" # 英雄
 IMAGE.MONSTER = "assets/monster.png" # 怪物
 IMAGE.PIT = "assets/pit.png" # 陷阱
 IMAGE.GOLD = "assets/gold.png" # 黄金
+
+EVENT = Const()
+"""
+事件
+"""
+EVENT.GAME_OVER = "gameOver" # 游戏结束
+EVENT.GAME_CLEAR = "gameClear" # 游戏通关
+EVENT.HERO_WALK = "heroWalk" # 英雄行动
+EVENT.DANGER = "danger" # 遭遇危险
+
+ENCOUNTER = Const()
+"""
+遭遇
+"""
+ENCOUNTER.MONSTER = 21 # 怪物
+ENCOUNTER.PIT = 22 # 坑洞
+ENCOUNTER.GOLD = 10 # 黄金
+
+SCORE = Const()
+"""
+分数
+"""
+SCORE.WALK = -1
+SCORE.WIN = 1000
+SCORE.LOSE = -1000
+SCORE.ATTACK = -10

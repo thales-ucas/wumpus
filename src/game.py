@@ -1,119 +1,106 @@
 import pygame
 import sys
 import numpy as np
-from utils import Layer, Sprite
-from const import LAYOUT
-from item import Hero,Mists
+from utils import Layer, Sprite, Renderer, Event
+from const import LAYOUT, EVENT, SCORE
+from item import Hero, Terrain, Encounter, Mists, Scoreboard, Popup
 
-class Game():
+class Game:
   """
   游戏
   """
-  __scene = Layer() # 场景
-  _data = None # 数据
+  _renderer = None # 渲染器
+  _running = False # 游戏运行状态
+  __scene = None # 场景
   __terrain = None # 地形层
-  __trip = None # 机关层
-  __hero = None # 英雄层
-  _heroPos = {"x": 0, "y": 0} # 英雄位置
+  __encounter = None # 遭遇层
+  __hero = None # 英雄
   __mists = None # 战争迷雾
+  __scoreboard = None # 记分牌
+  # __popup = None # 弹窗
   def __init__(self):
+    pygame.init()
     self.fpsClock = pygame.time.Clock()
-    self.screen = pygame.display.set_mode((LAYOUT.SCREEN_WIDTH, LAYOUT.SCREEN_HEIGHT))
-    self._data = self.getTerrain()
-    self.terrainInit()
-  def getTerrain(self):
-    terrain = np.zeros(LAYOUT.SIZE * LAYOUT.SIZE - 5 - 3)
-    terrain = np.append(terrain, [10, 21, 22, 22, 22])
-    np.random.shuffle(terrain)
-    terrain = np.insert(terrain, 0, 1)
-    terrain = np.insert(terrain, 1, 0)
-    terrain = np.insert(terrain, LAYOUT.SIZE, 0)
-    terrain.resize((LAYOUT.SIZE, LAYOUT.SIZE))
-    return terrain
-  def terrainInit(self):
-    self.__terrain = Layer()
-    self.__terrain.x = LAYOUT.TERRAIN_X
-    self.__terrain.y = LAYOUT.TERRAIN_Y
-    self.__trip = Layer()
-    self.__trip.x = LAYOUT.TERRAIN_X
-    self.__trip.y = LAYOUT.TERRAIN_Y
-    self.__hero = Hero()
-    self.__hero.x = LAYOUT.TERRAIN_X
-    self.__hero.y = LAYOUT.TERRAIN_Y
-    self.__mists = Mists(np.ones((LAYOUT.SIZE, LAYOUT.SIZE)))
-    self.__mists.x = LAYOUT.TERRAIN_X
-    self.__mists.y = LAYOUT.TERRAIN_Y
-    for m, row in enumerate(self._data):
-      for n, col in enumerate(row):
-        s = Sprite()
-        s.image = pygame.image.load("assets/tile.png").convert_alpha()
-        x = n * LAYOUT.TILE_WIDTH
-        y = m * LAYOUT.TILE_HEIGHT
-        s.x = x
-        s.y = y
-        self.__terrain.add(s) # 初始化地形
-        self.__mists.add(m, n)
-        trip = None
-        if col == 10:
-          trip = Sprite()
-          image = pygame.image.load("assets/gold.png").convert_alpha()
-          rect = image.get_rect()
-          trip.image = image
-          trip.x = x + (LAYOUT.TILE_WIDTH - rect.width) / 2
-          trip.y = y + (LAYOUT.TILE_HEIGHT - rect.height) / 2
-        elif col == 21:
-          trip = Sprite()
-          image = pygame.image.load("assets/monster.png").convert_alpha()
-          rect = image.get_rect()
-          trip.image = image
-          trip.x = x + (LAYOUT.TILE_WIDTH - rect.width) / 2
-          trip.y = y + (LAYOUT.TILE_HEIGHT - rect.height) / 2
-        elif col == 22:
-          trip = Sprite()
-          image = pygame.image.load("assets/pit.png").convert_alpha()
-          rect = image.get_rect()
-          trip.image = image
-          trip.x = x + (LAYOUT.TILE_WIDTH - rect.width) / 2
-          trip.y = y + (LAYOUT.TILE_HEIGHT - rect.height) / 2
-        if trip:
-          self.__trip.add(trip)
-    self.__scene.add(self.__terrain)
-    self.__scene.add(self.__trip)
-    self.__scene.add(self.__hero)
-    self.__scene.add(self.__mists)
+    self._renderer = Renderer(pygame.display.set_mode((LAYOUT.SCREEN_WIDTH, LAYOUT.SCREEN_HEIGHT)))
+    pygame.display.set_caption("wumpus world")
+    self.ready()
+  def ready(self):
+    self. __scene = Layer() # 初始化场景
+    game = Layer() # 初始化游戏层
+    game.x = LAYOUT.TERRAIN_X
+    game.y = LAYOUT.TERRAIN_Y
+    self.__scoreboard = Scoreboard()
+    self.__scoreboard.x = LAYOUT.SCOREBOARD_X
+    self.__scoreboard.y = LAYOUT.SCOREBOARD_Y
+    # self.__popup = Popup()
+    # self.__popup.x = LAYOUT.POPUP_X
+    # self.__popup.y = LAYOUT.POPUP_Y
+    self.__scene.add(game, self.__scoreboard)
+    self.__terrain = Terrain(np.ones((LAYOUT.SIZE, LAYOUT.SIZE))) # 按照尺寸构造地形
+    self.__mists = Mists(np.ones((LAYOUT.SIZE, LAYOUT.SIZE))) # 按照尺寸构造战争迷雾
+    self.__encounter = Encounter() # 构造遭遇层
+    self.__encounter.on(EVENT.GAME_CLEAR, self.onGameClear) # 侦听游戏过关
+    self.__encounter.on(EVENT.GAME_OVER, self.onGameOver) # 侦听游戏结束
+    self.__hero = Hero() # 构造英雄
+    self.__hero.on(EVENT.HERO_WALK, self.onHeroWalk) # 侦听英雄行走
+    game.add(self.__terrain, self.__encounter, self.__hero, self.__mists) # 顺序不能错，地形在最下，战争迷雾在最上
     self.__mists.scan(0, 0)
-  def render(self, layer, x = 0, y = 0):
-    if layer.type == "sprite":
-      self.screen.blit(layer.image, (layer.x + x, layer.y + y))
-    elif layer.type == "layer":
-      for child in layer.children:
-        self.render(child, layer.x, layer.y)
-  def show(self):
-    self.screen.fill((0,0,0))
+    self._renderer.show(self.__scene)
+  def onHeroWalk(self, e):
+    """
+    英雄行走
+    """
+    self.__scoreboard.change(SCORE.WALK)
+    self.__mists.scan(e.m, e.n)
+    self.__encounter.hit(e.m, e.n)
+  def onGameClear(self, e):
+    """
+    过关,找到黄金
+    """
+    self.__scoreboard.change(SCORE.WIN)
+    self.__scoreboard.win()
+    self.stop()
+  def onGameOver(self, e):
+    """
+    危险,遭遇怪物或者陷坑
+    """
+    print(e.code)
+    self.__scoreboard.change(SCORE.LOSE)
+    self.__scoreboard.lose()
+    self.stop()
+  def restart(self):
+    """
+    重玩
+    """ 
+    self.ready()
+    self.start()
+  def start(self):
+    """
+    开始游戏
+    """
+    self._running = True
+    self.run()
+  def stop(self):
+    self._running = False
   def run(self):
-    running = True
-    while running:
-      self.render(self.__scene)
+    while True:
       pygame.display.flip()
       for event in pygame.event.get():
         if event.type == pygame.QUIT:
-          running = False
+          self._running = False
           sys.exit()
         elif event.type == pygame.KEYDOWN:
-          if event.key == pygame.K_LEFT or event.key == ord('a'):
-            if self._heroPos["x"] > 0:
-              self._heroPos["x"] -= 1
+          if self._running:
+            if event.key == pygame.K_LEFT or event.key == ord('a'):
               self.__hero.left()
-          if event.key == pygame.K_RIGHT or event.key == ord('d'):
-            if self._heroPos["x"] < LAYOUT.SIZE - 1:
-              self._heroPos["x"] += 1
+            if event.key == pygame.K_RIGHT or event.key == ord('d'):
               self.__hero.right()
-          if event.key == pygame.K_UP or event.key == ord('w'):
-            if self._heroPos["y"] > 0:
-              self._heroPos["y"] -= 1
+            if event.key == pygame.K_UP or event.key == ord('w'):
               self.__hero.up()
-          if event.key == pygame.K_DOWN or event.key == ord('s'):
-            if self._heroPos["y"] < LAYOUT.SIZE - 1:
-              self._heroPos["y"] += 1
+            if event.key == pygame.K_DOWN or event.key == ord('s'):
               self.__hero.down()
-          self.__mists.scan(self._heroPos["x"], self._heroPos["y"])
+          else:
+            if event.key == pygame.K_SPACE:
+              self.restart()
+          self._renderer.show(self.__scene)
+      pygame.display.update()

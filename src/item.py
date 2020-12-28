@@ -1,11 +1,14 @@
 import pygame
-from utils import Layer, Sprite
-from const import LAYOUT, IMAGE
+import numpy as np
+from utils import Layer, Sprite, Graphic, Event
+from const import LAYOUT, IMAGE, EVENT, ENCOUNTER
 
 class Hero(Layer):
   """
-  英雄层
+  英雄
   """
+  m = 0 # 横坐标
+  n = 0 # 纵坐标
   def __init__(self):
     Layer.__init__(self)
     s = Sprite()
@@ -15,17 +18,58 @@ class Hero(Layer):
     s.x = (LAYOUT.TILE_WIDTH - rect.width) / 2
     s.y = (LAYOUT.TILE_HEIGHT - rect.height) / 2
     self.add(s)
+  def pos(self):
+    """
+    位置改变
+    """
+    self.x = self.m * LAYOUT.TILE_WIDTH
+    self.y = self.n * LAYOUT.TILE_HEIGHT
+    e = Event(EVENT.HERO_WALK)
+    e.m = self.m
+    e.n = self.n
+    self.dispatchEvent(e)
   def reset(self):
-    self.x = LAYOUT.TERRAIN_X
-    self.y = LAYOUT.TERRAIN_Y
+    self.m = 0
+    self.n = 0
+    self.pos()
   def left(self):
-    self.x -= LAYOUT.TILE_WIDTH
+    if self.m > 0:
+      self.m -= 1
+      self.pos()
   def right(self):
-    self.x += LAYOUT.TILE_WIDTH
+    if self.m < LAYOUT.SIZE - 1:
+      self.m += 1
+      self.pos()
   def up(self):
-    self.y -= LAYOUT.TILE_HEIGHT
+    if self.n > 0:
+      self.n -= 1
+      self.pos()
   def down(self):
-    self.y += LAYOUT.TILE_HEIGHT
+    if self.n < LAYOUT.SIZE - 1:
+      self.n += 1
+      self.pos()
+class Tile(Sprite):
+  """
+  地板
+  """
+  def __init__(self):
+    Sprite.__init__(self)
+    self.image = pygame.image.load(IMAGE.TILE).convert_alpha()
+class Terrain(Layer):
+  """
+  地形层
+  """
+  _data = None
+  def __init__(self, data):
+    Layer.__init__(self)
+    self._data = data
+    for m, row in enumerate(self._data):
+      for n, col in enumerate(row):
+        if col == 1:
+          tile = Tile()
+          tile.x = n * LAYOUT.TILE_WIDTH
+          tile.y = m * LAYOUT.TILE_HEIGHT
+          self.add(tile) # 初始化地形
 
 class Mist(Sprite):
   """
@@ -43,15 +87,167 @@ class Mists(Layer):
   def __init__(self, data):
     Layer.__init__(self)
     self._data = data
-  def add(self, x, y):
-    mist = Mist()
-    mist.name = "mist_%s_%s" % (x, y)
-    mist.x = x * LAYOUT.TILE_WIDTH
-    mist.y = y * LAYOUT.TILE_HEIGHT
-    super().add(mist)
-  def scan(self, x, y):
-    if self._data[y][x] == 1:
-      self._data[y][x] = 0
-      for index, child in enumerate(self.children):
-        if child.name == "mist_%s_%s" % (x, y):
-          self.children.pop(index)
+    for m, row in enumerate(self._data):
+      for n, col in enumerate(row):
+        if col == 1:
+          mist = Mist()
+          mist.name = "mist_%s_%s" % (m, n)
+          mist.x = m * LAYOUT.TILE_WIDTH
+          mist.y = n * LAYOUT.TILE_HEIGHT
+          self.add(mist)
+  def scan(self, m, n):
+    if self._data[n][m] == 1:
+      self._data[n][m] = 0
+      for child in self.children:
+        if child.name == "mist_%s_%s" % (m, n):
+          self.children.remove(child)
+      self.dispatch({"name": "dissipate"})
+class Encounter(Layer):
+  """
+  遭遇层
+  """
+  _data = None # 数据
+  def __init__(self):
+    Layer.__init__(self)
+    data = np.zeros(LAYOUT.SIZE * LAYOUT.SIZE - 5 - 3)
+    data = np.append(data, [ENCOUNTER.GOLD, ENCOUNTER.MONSTER, ENCOUNTER.PIT, ENCOUNTER.PIT, ENCOUNTER.PIT])
+    np.random.shuffle(data)
+    data = np.insert(data, 0, 0) # 最初位置和上下不能有怪
+    data = np.insert(data, 1, 0)
+    data = np.insert(data, LAYOUT.SIZE, 0)
+    self._data = data.reshape((LAYOUT.SIZE, LAYOUT.SIZE))
+    self.ready()
+  def ready(self):
+    for m, row in enumerate(self._data):
+      for n, col in enumerate(row):
+        x = n * LAYOUT.TILE_WIDTH
+        y = m * LAYOUT.TILE_HEIGHT
+        trip = None
+        if col == ENCOUNTER.GOLD:
+          trip = Sprite()
+          image = pygame.image.load(IMAGE.GOLD).convert_alpha()
+          rect = image.get_rect()
+          trip.image = image
+          trip.x = x + (LAYOUT.TILE_WIDTH - rect.width) / 2
+          trip.y = y + (LAYOUT.TILE_HEIGHT - rect.height) / 2
+        elif col == ENCOUNTER.MONSTER:
+          trip = Sprite()
+          image = pygame.image.load(IMAGE.MONSTER).convert_alpha()
+          rect = image.get_rect()
+          trip.image = image
+          trip.x = x + (LAYOUT.TILE_WIDTH - rect.width) / 2
+          trip.y = y + (LAYOUT.TILE_HEIGHT - rect.height) / 2
+        elif col == ENCOUNTER.PIT:
+          trip = Sprite()
+          image = pygame.image.load(IMAGE.PIT).convert_alpha()
+          rect = image.get_rect()
+          trip.image = image
+          trip.x = x + (LAYOUT.TILE_WIDTH - rect.width) / 2
+          trip.y = y + (LAYOUT.TILE_HEIGHT - rect.height) / 2
+        if trip:
+          self.add(trip)
+  def hit(self, m, n):
+    code = self._data[n][m]
+    if code == ENCOUNTER.GOLD:
+      e = Event(EVENT.GAME_CLEAR)
+      self.dispatch(e)
+    elif code == ENCOUNTER.MONSTER or code == ENCOUNTER.PIT:
+      e = Event(EVENT.GAME_OVER)
+      e.code = code
+      self.dispatch(e)
+
+class Smell(Layer):
+  """
+  气息层
+  """
+  _data = None # 遭遇数据
+  def __init__(self, data):
+    Layer.__init__(self)
+    self._data = data
+  def warn(self, type, m, n):
+    pass
+  
+class Scoreboard(Layer):
+  """
+  记分牌
+  """
+  _score = 0 # 分数数据
+  __score = None # 分数实体
+  _font = None # 字体
+  __win = None # 胜利画面
+  __lose= None # 失败画面
+  __restart = None # 重开画面
+  def __init__(self):
+    Layer.__init__(self)
+    self._font = pygame.font.Font('freesansbold.ttf', 28)
+    self.ready()
+  def ready(self):
+    title = Sprite()
+    text = self._font.render('SCORE:',True, (0,0,0))
+    title.image = text
+    rect = text.get_rect()
+    self.__score = Sprite()
+    self.__score.x = rect.width
+    self.__score.image = self._font.render('%s' % self._score, True, (255,0,0))
+    self.__win = Sprite()
+    self.__win.image = self._font.render("You win!", True, (255,0,0))
+    self.__win.y = rect.height
+    self.__lose = Sprite()
+    self.__lose.image = self._font.render("You lose!", True, (255,0,0))
+    self.__lose.y = rect.height
+    self.__restart = Sprite()
+    self.__restart.image = self._font.render("push space to restart game.", True, (255,0,0))
+    self.__restart.y = rect.height * 2
+    tip = Sprite()
+    tip.image = self._font.render("use direct keys to move.", True, (0,0,0))
+    tip.y = rect.height * 3
+    self.__win.visible = False
+    self.__lose.visible = False
+    self.__restart.visible = False
+    self.add(title, self.__score, self.__win, self.__lose, self.__restart, tip)
+  def change(self, num):
+    self._score += num
+    self.__score.image = self._font.render('%s' % self._score, True, (255,0,0))
+    return self._score
+  def win(self):
+    self.__lose.visible = False
+    self.__win.visible = True
+    self.__restart.visible = True
+  def lose(self):
+    self.__lose.visible = True
+    self.__win.visible = False
+    self.__restart.visible = True
+class Popup(Layer):
+  """
+  弹窗
+  """
+  __win = None # 胜利画面
+  __lose= None # 失败画面
+  _font = None # 字体
+  def __init__(self):
+    Layer.__init__(self)
+    bg = Graphic()
+    bg.draw = lambda screen, x, y: pygame.draw.rect(screen, (235, 235, 235, 10), (x, y, LAYOUT.POPUP_WIDTH, LAYOUT.POPUP_HEIGHT))
+    self._font = pygame.font.Font('freesansbold.ttf', 28)
+    self.__win = Sprite()
+    self.__win.image = self._font.render("You win!", True, (255,0,0))
+    self.__win.x = 80
+    self.__win.y = 50
+    self.__lose = Sprite()
+    self.__lose.image = self._font.render("You lose!", True, (255,0,0))
+    self.__lose.x = 80
+    self.__lose.y = 50
+    self.add(bg, self.__win, self.__lose)
+    self.hide()
+  def win(self):
+    self.__lose.visible = False
+    self.__win.visible = True
+    self.show()
+  def lose(self):
+    self.__lose.visible = True
+    self.__win.visible = False
+    self.show()
+  def show(self):
+    self.visible = True
+  def hide(self):
+    self.visible = False
