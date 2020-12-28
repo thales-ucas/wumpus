@@ -58,7 +58,7 @@ class EventDispatcher:
     """
     if self._listeners == None:
       return
-    if self._listeners[event.name]:
+    if event.name in self._listeners:
       event.target = self
       for fun in self._listeners[event.name]:
         fun(event)
@@ -86,7 +86,7 @@ class Layer(DisplayBase):
   def add(self, *layers):
     for layer in layers:
       self.children.append(layer)
-  def delelte(self, *layers):
+  def delete(self, *layers):
     for layer in layers:
       self.children.remove(layer)
 

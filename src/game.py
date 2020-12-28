@@ -42,10 +42,12 @@ class Game:
     self.__encounter = Encounter() # 构造遭遇层
     self.__encounter.on(EVENT.GAME_CLEAR, self.onGameClear) # 侦听游戏过关
     self.__encounter.on(EVENT.GAME_OVER, self.onGameOver) # 侦听游戏结束
+    self.__encounter.on(EVENT.MONSTER_DEAD, self.onMonsterDead) # 侦听怪兽死亡
     self.__hero = Hero() # 构造英雄
+    self.__hero.on(EVENT.HERO_WALK, self.onHeroWalk) # 侦听英雄行走
+    self.__hero.on(EVENT.HERO_ATTACK, self.onHeroAttack) # 侦听英雄攻击
     self.__smell = Smell() # 气息层
     self.__smell.show(self.__encounter.getData()) # 根据遭遇层的陷阱和怪物创造气息
-    self.__hero.on(EVENT.HERO_WALK, self.onHeroWalk) # 侦听英雄行走
     game.add(self.__terrain, self.__encounter, self.__hero, self.__smell, self.__mists) # 顺序不能错，地形在最下，战争迷雾在最上
     # self.__mists.visible = False
     self.__mists.scan(0, 0)
@@ -57,6 +59,17 @@ class Game:
     self.__scoreboard.change(SCORE.WALK)
     self.__mists.scan(e.m, e.n)
     self.__encounter.hit(e.m, e.n)
+  def onHeroAttack(self, e):
+    """
+    英雄攻击
+    """
+    self.__scoreboard.change(SCORE.ATTACK)
+    self.__encounter.shot(e.m, e.n)
+  def onMonsterDead(self, e):
+    """
+    怪兽死亡
+    """
+    self.__smell.show(self.__encounter.getData())
   def onGameClear(self, e):
     """
     过关,找到黄金
@@ -97,12 +110,14 @@ class Game:
           if self._running:
             if event.key == pygame.K_LEFT or event.key == ord('a'):
               self.__hero.left()
-            if event.key == pygame.K_RIGHT or event.key == ord('d'):
+            elif event.key == pygame.K_RIGHT or event.key == ord('d'):
               self.__hero.right()
-            if event.key == pygame.K_UP or event.key == ord('w'):
+            elif event.key == pygame.K_UP or event.key == ord('w'):
               self.__hero.up()
-            if event.key == pygame.K_DOWN or event.key == ord('s'):
+            elif event.key == pygame.K_DOWN or event.key == ord('s'):
               self.__hero.down()
+            elif event.key == pygame.K_SPACE:
+              self.__hero.attack()
           else:
             if event.key == pygame.K_SPACE:
               self.restart()

@@ -45,7 +45,9 @@ EVENT = Const()
 """
 EVENT.GAME_OVER = "gameOver" # 游戏结束
 EVENT.GAME_CLEAR = "gameClear" # 游戏通关
-EVENT.HERO_WALK = "heroWalk" # 英雄行动
+EVENT.MONSTER_DEAD = "monsterDead" # 怪兽死亡
+EVENT.HERO_WALK = "heroWalk" # 英雄走动
+EVENT.HERO_ATTACK = "heroAttack" # 英雄攻击
 EVENT.DANGER = "danger" # 遭遇危险
 
 ENCOUNTER = Const()

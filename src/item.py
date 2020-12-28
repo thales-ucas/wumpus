@@ -9,6 +9,8 @@ class Hero(Layer):
   """
   m = 0 # 横坐标
   n = 0 # 纵坐标
+  __tips = None # 射击提示
+  _archery = 1 # 弓箭数量
   def __init__(self):
     Layer.__init__(self)
     s = Sprite()
@@ -17,37 +19,50 @@ class Hero(Layer):
     s.image = image
     s.x = (LAYOUT.TILE_WIDTH - rect.width) / 2
     s.y = (LAYOUT.TILE_HEIGHT - rect.height) / 2
-    self.add(s)
-  def pos(self):
+    self.__tips = Sprite()
+    myfont  = pygame.font.SysFont('SimHei',14)
+    text = myfont.render("请选择方向", True, (0,0,0))
+    textObj = text.get_rect()
+    self.__tips.image = text
+    self.__tips.x = (LAYOUT.TILE_WIDTH - textObj.width) / 2
+    self.__tips.y = (LAYOUT.TILE_HEIGHT - textObj.height) / 2
+    self.add(s, self.__tips)
+    self.__tips.visible = False
+  def pos(self, m, n):
     """
     位置改变
     """
-    self.x = self.m * LAYOUT.TILE_WIDTH
-    self.y = self.n * LAYOUT.TILE_HEIGHT
-    e = Event(EVENT.HERO_WALK)
-    e.m = self.m
-    e.n = self.n
-    self.dispatchEvent(e)
+    if self.__tips.visible:
+      e = Event(EVENT.HERO_ATTACK)
+      self.__tips.visible = False
+      self._archery -= 1
+    else:
+      self.m = m
+      self.n = n
+      self.x = self.n * LAYOUT.TILE_WIDTH
+      self.y = self.m * LAYOUT.TILE_HEIGHT
+      e = Event(EVENT.HERO_WALK)
+    e.m = m
+    e.n = n
+    self.dispatch(e)
+  def attack(self):
+    if self._archery > 0:
+      self.__tips.visible = not self.__tips.visible
   def reset(self):
-    self.m = 0
-    self.n = 0
-    self.pos()
-  def left(self):
-    if self.m > 0:
-      self.m -= 1
-      self.pos()
-  def right(self):
-    if self.m < LAYOUT.SIZE - 1:
-      self.m += 1
-      self.pos()
+    self.__tips.visible = False
+    self.pos(0, 0)
   def up(self):
-    if self.n > 0:
-      self.n -= 1
-      self.pos()
+    if self.m > 0:
+      self.pos(self.m - 1, self.n)
   def down(self):
+    if self.m < LAYOUT.SIZE - 1:
+      self.pos(self.m + 1, self.n)
+  def left(self):
+    if self.n > 0:
+      self.pos(self.m, self.n - 1)
+  def right(self):
     if self.n < LAYOUT.SIZE - 1:
-      self.n += 1
-      self.pos()
+      self.pos(self.m, self.n + 1)
 class Tile(Sprite):
   """
   地板
@@ -92,12 +107,12 @@ class Mists(Layer):
         if col == 1:
           mist = Mist()
           mist.name = "mist_%s_%s" % (m, n)
-          mist.x = m * LAYOUT.TILE_WIDTH
-          mist.y = n * LAYOUT.TILE_HEIGHT
+          mist.x = n * LAYOUT.TILE_WIDTH
+          mist.y = m * LAYOUT.TILE_HEIGHT
           self.add(mist)
   def scan(self, m, n):
-    if self._data[n][m] == 1:
-      self._data[n][m] = 0
+    if self._data[m][n] == 1:
+      self._data[m][n] = 0
       for child in self.children:
         if child.name == "mist_%s_%s" % (m, n):
           self.children.remove(child)
@@ -135,6 +150,7 @@ class Encounter(Layer):
           image = pygame.image.load(IMAGE.MONSTER).convert_alpha()
           rect = image.get_rect()
           trip.image = image
+          trip.name = "monster"
           trip.x = x + (LAYOUT.TILE_WIDTH - rect.width) / 2
           trip.y = y + (LAYOUT.TILE_HEIGHT - rect.height) / 2
         elif col == ENCOUNTER.PIT:
@@ -147,13 +163,24 @@ class Encounter(Layer):
         if trip:
           self.add(trip)
   def hit(self, m, n):
-    code = self._data[n][m]
+    code = self._data[m][n]
     if code == ENCOUNTER.GOLD:
       e = Event(EVENT.GAME_CLEAR)
       self.dispatch(e)
     elif code == ENCOUNTER.MONSTER or code == ENCOUNTER.PIT:
       e = Event(EVENT.GAME_OVER)
       e.code = code
+      self.dispatch(e)
+  def shot(self, m, n):
+    code = self._data[m][n]
+    if code == ENCOUNTER.MONSTER:
+      self._data[m][n] = 0
+      for child in self.children:
+        if child.name == "monster":
+          self.children.remove(child)
+      e = Event(EVENT.MONSTER_DEAD)
+      e.m = m
+      e.n = n
       self.dispatch(e)
   def getData(self):
     return self._data
@@ -211,6 +238,7 @@ class Smell(Layer):
     Layer.__init__(self)
     self._data = np.zeros((LAYOUT.SIZE, LAYOUT.SIZE))
   def show(self, data):
+    self.children = []
     self._origin = data
     for m, row in enumerate(data):
       for n, col in enumerate(row):
@@ -264,7 +292,7 @@ class Scoreboard(Layer):
     self.__restart.image = self._font.render("请按空格重新游戏", True, (255,0,0))
     self.__restart.y = rect.height * 2
     tip = Sprite()
-    tip.image = self._font.render("使用方向键移动", True, (0,0,0))
+    tip.image = self._font.render("使用方向键移动,空格射箭", True, (0,0,0))
     tip.y = rect.height * 3
     self.__win.visible = False
     self.__lose.visible = False
