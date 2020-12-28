@@ -155,17 +155,82 @@ class Encounter(Layer):
       e = Event(EVENT.GAME_OVER)
       e.code = code
       self.dispatch(e)
+  def getData(self):
+    return self._data
+
+class Strench(Layer):
+  """
+  怪物附近的臭气
+  """
+  def __init__(self):
+    Layer.__init__(self)
+    for i in [-1, 0, 1]:
+      s = Sprite()
+      image = pygame.image.load(IMAGE.STRENCH).convert_alpha()
+      s.image = image
+      imageRect = image.get_rect()
+      s.x = LAYOUT.TILE_WIDTH / 2 + imageRect.width * i - imageRect.width / 2
+      s.y = LAYOUT.TILE_HEIGHT - imageRect.height + (abs(i) - 1) * imageRect.height / 2
+      self.add(s)
+    t = Sprite()
+    myfont = pygame.font.Font('freesansbold.ttf', 14)
+    text = myfont.render('stench', True, (0,0,0))
+    t.image = text
+    rect = text.get_rect()
+    t.x = (LAYOUT.TILE_WIDTH - rect.width) / 2
+    t.y = LAYOUT.TILE_HEIGHT - rect.height
+    self.add(t)
+class Breeze(Layer):
+  """
+  洞口在附近的微风
+  """
+  def __init__(self):
+    Layer.__init__(self)
+    s = Sprite()
+    image = pygame.image.load(IMAGE.BREEZE).convert_alpha()
+    s.image = image
+    imageRect = image.get_rect()
+    s.x = (LAYOUT.TILE_WIDTH - imageRect.width) / 2
+    s.y = 3
+    t = Sprite()
+    myfont = pygame.font.Font('freesansbold.ttf', 14)
+    text = myfont.render('breeze', True, (0,0,0))
+    t.image = text
+    textRect = text.get_rect()
+    t.x = (LAYOUT.TILE_WIDTH - textRect.width) / 2
+    t.y = 10
+    self.add(s, t)
 
 class Smell(Layer):
   """
   气息层
   """
-  _data = None # 遭遇数据
-  def __init__(self, data):
+  _origin = None # 遭遇原始数据
+  _data = None # 气息数据
+  def __init__(self):
     Layer.__init__(self)
-    self._data = data
-  def warn(self, type, m, n):
-    pass
+    self._data = np.zeros((LAYOUT.SIZE, LAYOUT.SIZE))
+  def show(self, data):
+    self._origin = data
+    for m, row in enumerate(data):
+      for n, col in enumerate(row):
+        self.warn(col, m - 1, n)
+        self.warn(col, m + 1, n)
+        self.warn(col, m, n - 1)
+        self.warn(col, m, n + 1)
+  def warn(self, code, m, n):
+    if code in [ENCOUNTER.MONSTER, ENCOUNTER.PIT] and m >= 0 and m < LAYOUT.SIZE and n >= 0 and n < LAYOUT.SIZE and self._origin[m][n] == 0:
+      s = None
+      if code == ENCOUNTER.MONSTER:
+        s = Strench()
+      elif code == ENCOUNTER.PIT:
+        s = Breeze()
+      if s:
+        s.x = n * LAYOUT.TILE_WIDTH
+        s.y = m * LAYOUT.TILE_HEIGHT
+        self._data[m][n] = code
+        self.add(s)
+
   
 class Scoreboard(Layer):
   """
@@ -179,7 +244,7 @@ class Scoreboard(Layer):
   __restart = None # 重开画面
   def __init__(self):
     Layer.__init__(self)
-    self._font = pygame.font.Font('freesansbold.ttf', 28)
+    self._font = pygame.font.SysFont('SimHei',28)
     self.ready()
   def ready(self):
     title = Sprite()
@@ -196,10 +261,10 @@ class Scoreboard(Layer):
     self.__lose.image = self._font.render("You lose!", True, (255,0,0))
     self.__lose.y = rect.height
     self.__restart = Sprite()
-    self.__restart.image = self._font.render("push space to restart game.", True, (255,0,0))
+    self.__restart.image = self._font.render("请按空格重新游戏", True, (255,0,0))
     self.__restart.y = rect.height * 2
     tip = Sprite()
-    tip.image = self._font.render("use direct keys to move.", True, (0,0,0))
+    tip.image = self._font.render("使用方向键移动", True, (0,0,0))
     tip.y = rect.height * 3
     self.__win.visible = False
     self.__lose.visible = False

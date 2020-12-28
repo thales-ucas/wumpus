@@ -36,6 +36,8 @@ IMAGE.HERO = "assets/hero.png" # 英雄
 IMAGE.MONSTER = "assets/monster.png" # 怪物
 IMAGE.PIT = "assets/pit.png" # 陷阱
 IMAGE.GOLD = "assets/gold.png" # 黄金
+IMAGE.BREEZE = "assets/breeze.png" # 微风
+IMAGE.STRENCH = "assets/strench.png" # 臭气
 
 EVENT = Const()
 """

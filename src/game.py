@@ -3,7 +3,7 @@ import sys
 import numpy as np
 from utils import Layer, Sprite, Renderer, Event
 from const import LAYOUT, EVENT, SCORE
-from item import Hero, Terrain, Encounter, Mists, Scoreboard, Popup
+from item import Hero, Terrain, Encounter, Smell, Mists, Scoreboard, Popup
 
 class Game:
   """
@@ -14,6 +14,7 @@ class Game:
   __scene = None # 场景
   __terrain = None # 地形层
   __encounter = None # 遭遇层
+  __smell = None # 气息层
   __hero = None # 英雄
   __mists = None # 战争迷雾
   __scoreboard = None # 记分牌
@@ -42,8 +43,11 @@ class Game:
     self.__encounter.on(EVENT.GAME_CLEAR, self.onGameClear) # 侦听游戏过关
     self.__encounter.on(EVENT.GAME_OVER, self.onGameOver) # 侦听游戏结束
     self.__hero = Hero() # 构造英雄
+    self.__smell = Smell() # 气息层
+    self.__smell.show(self.__encounter.getData()) # 根据遭遇层的陷阱和怪物创造气息
     self.__hero.on(EVENT.HERO_WALK, self.onHeroWalk) # 侦听英雄行走
-    game.add(self.__terrain, self.__encounter, self.__hero, self.__mists) # 顺序不能错，地形在最下，战争迷雾在最上
+    game.add(self.__terrain, self.__encounter, self.__hero, self.__smell, self.__mists) # 顺序不能错，地形在最下，战争迷雾在最上
+    # self.__mists.visible = False
     self.__mists.scan(0, 0)
     self._renderer.show(self.__scene)
   def onHeroWalk(self, e):
@@ -64,7 +68,7 @@ class Game:
     """
     危险,遭遇怪物或者陷坑
     """
-    print(e.code)
+    # print(e.code)
     self.__scoreboard.change(SCORE.LOSE)
     self.__scoreboard.lose()
     self.stop()

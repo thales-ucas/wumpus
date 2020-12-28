@@ -1,4 +1,3 @@
-import pygame
 class Event:
   """
   事件
@@ -73,6 +72,7 @@ class DisplayBase(EventDispatcher):
   y = 0
   visible = True
   type = None
+  name = ""
   def __init__(self):
     EventDispatcher.__init__(self)
 class Layer(DisplayBase):
