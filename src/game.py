@@ -49,8 +49,13 @@ class Game:
     self.__smell = Smell() # 气息层
     self.__smell.show(self.__encounter.getData()) # 根据遭遇层的陷阱和怪物创造气息
     game.add(self.__terrain, self.__encounter, self.__hero, self.__smell, self.__mists) # 顺序不能错，地形在最下，战争迷雾在最上
-    # self.__mists.visible = False
     self.__mists.scan(0, 0)
+    self._renderer.show(self.__scene)
+  def disspiate(self):
+    """
+    地图全开
+    """
+    self.__mists.visible = False
     self._renderer.show(self.__scene)
   def onHeroWalk(self, e):
     """
@@ -69,7 +74,7 @@ class Game:
     """
     怪兽死亡
     """
-    self.__smell.show(self.__encounter.getData())
+    self.__smell.show(self.__encounter.getData()) # 让感知根据新的遭遇数据生成感知
   def onGameClear(self, e):
     """
     过关,找到黄金

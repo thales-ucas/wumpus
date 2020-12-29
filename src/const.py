@@ -62,7 +62,7 @@ SCORE = Const()
 """
 分数
 """
-SCORE.WALK = -1
-SCORE.WIN = 1000
-SCORE.LOSE = -1000
-SCORE.ATTACK = -10
+SCORE.WALK = -1 # 行走
+SCORE.WIN = 1000 # 胜利
+SCORE.LOSE = -1000 # 失败
+SCORE.ATTACK = -10 # 攻击

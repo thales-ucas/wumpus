@@ -85,6 +85,13 @@ class Terrain(Layer):
           tile.x = n * LAYOUT.TILE_WIDTH
           tile.y = m * LAYOUT.TILE_HEIGHT
           self.add(tile) # 初始化地形
+          # myfont  = pygame.font.SysFont('SimHei',14)
+          # text = myfont.render("(%d,%d)" % (m, n), True, (0,0,0))
+          # t = Sprite()
+          # t.image = text
+          # t.x = n * LAYOUT.TILE_WIDTH + 2
+          # t.y = m * LAYOUT.TILE_HEIGHT + 2
+          # self.add(t)
 
 class Mist(Sprite):
   """
@@ -162,19 +169,26 @@ class Encounter(Layer):
           trip.y = y + (LAYOUT.TILE_HEIGHT - rect.height) / 2
         if trip:
           self.add(trip)
+        # myfont  = pygame.font.SysFont('SimHei',14)
+        # text = myfont.render("%d" % col, True, (0,0,0))
+        # t = Sprite()
+        # t.image = text
+        # t.x = x + 2
+        # t.y = y + 2
+        # self.add(t)
   def hit(self, m, n):
     code = self._data[m][n]
-    if code == ENCOUNTER.GOLD:
+    if code == ENCOUNTER.GOLD: # 碰到黄金通关
       e = Event(EVENT.GAME_CLEAR)
       self.dispatch(e)
-    elif code == ENCOUNTER.MONSTER or code == ENCOUNTER.PIT:
+    elif code == ENCOUNTER.MONSTER or code == ENCOUNTER.PIT: # 碰到怪兽或者坑洞失败
       e = Event(EVENT.GAME_OVER)
       e.code = code
       self.dispatch(e)
   def shot(self, m, n):
     code = self._data[m][n]
     if code == ENCOUNTER.MONSTER:
-      self._data[m][n] = 0
+      self._data[m][n] = 0 # 怪兽死亡要清空位置所在数据
       for child in self.children:
         if child.name == "monster":
           self.children.remove(child)
