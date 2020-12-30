@@ -80,9 +80,9 @@ class Layer(DisplayBase):
   层
   """
   def __init__(self):
-    EventDispatcher.__init__(self)
+    DisplayBase.__init__(self)
     self.type = "layer"
-    self.children = []
+    self.children = [] # 子元素
   def add(self, *layers):
     for layer in layers:
       self.children.append(layer)
@@ -95,8 +95,9 @@ class Sprite(DisplayBase):
   精灵最终元素，没有children
   """
   def __init__(self):
+    DisplayBase.__init__(self)
     self.type = "sprite"
-    self.image = None
+    self.surface = None
 
 class Graphic(DisplayBase):
   """
@@ -120,9 +121,9 @@ class Renderer:
       x += layer.x
       y += layer.y
       if layer.type == "sprite":
-        self._screen.blit(layer.image, (x, y))
+        self._screen.blit(layer.surface, (x, y))
       if layer.type == "graphic":
         layer.draw(self._screen, x, y)
       elif layer.type == "layer":
         for child in layer.children:
-          self.render(child, x, y)
+          self.render(child, x, y) # 递归渲染

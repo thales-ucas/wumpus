@@ -16,14 +16,14 @@ class Hero(Layer):
     s = Sprite()
     image = pygame.image.load(IMAGE.HERO).convert_alpha()
     rect = image.get_rect()
-    s.image = image
+    s.surface = image
     s.x = (LAYOUT.TILE_WIDTH - rect.width) / 2
     s.y = (LAYOUT.TILE_HEIGHT - rect.height) / 2
     self.__tips = Sprite()
     myfont  = pygame.font.SysFont('SimHei',14)
     text = myfont.render("请选择方向", True, (0,0,0))
     textObj = text.get_rect()
-    self.__tips.image = text
+    self.__tips.surface = text
     self.__tips.x = (LAYOUT.TILE_WIDTH - textObj.width) / 2
     self.__tips.y = (LAYOUT.TILE_HEIGHT - textObj.height) / 2
     self.add(s, self.__tips)
@@ -69,7 +69,7 @@ class Tile(Sprite):
   """
   def __init__(self):
     Sprite.__init__(self)
-    self.image = pygame.image.load(IMAGE.TILE).convert_alpha()
+    self.surface = pygame.image.load(IMAGE.TILE).convert_alpha()
 class Terrain(Layer):
   """
   地形层
@@ -88,7 +88,7 @@ class Terrain(Layer):
           # myfont  = pygame.font.SysFont('SimHei',14)
           # text = myfont.render("(%d,%d)" % (m, n), True, (0,0,0))
           # t = Sprite()
-          # t.image = text
+          # t.surface = text
           # t.x = n * LAYOUT.TILE_WIDTH + 2
           # t.y = m * LAYOUT.TILE_HEIGHT + 2
           # self.add(t)
@@ -100,7 +100,7 @@ class Mist(Sprite):
   name = ""
   def __init__(self):
     Sprite.__init__(self)
-    self.image = pygame.image.load(IMAGE.MIST).convert_alpha()
+    self.surface = pygame.image.load(IMAGE.MIST).convert_alpha()
 class Mists(Layer):
   """
   迷雾层
@@ -149,14 +149,14 @@ class Encounter(Layer):
           trip = Sprite()
           image = pygame.image.load(IMAGE.GOLD).convert_alpha()
           rect = image.get_rect()
-          trip.image = image
+          trip.surface = image
           trip.x = x + (LAYOUT.TILE_WIDTH - rect.width) / 2
           trip.y = y + (LAYOUT.TILE_HEIGHT - rect.height) / 2
         elif col == ENCOUNTER.MONSTER:
           trip = Sprite()
           image = pygame.image.load(IMAGE.MONSTER).convert_alpha()
           rect = image.get_rect()
-          trip.image = image
+          trip.surface = image
           trip.name = "monster"
           trip.x = x + (LAYOUT.TILE_WIDTH - rect.width) / 2
           trip.y = y + (LAYOUT.TILE_HEIGHT - rect.height) / 2
@@ -164,7 +164,7 @@ class Encounter(Layer):
           trip = Sprite()
           image = pygame.image.load(IMAGE.PIT).convert_alpha()
           rect = image.get_rect()
-          trip.image = image
+          trip.surface = image
           trip.x = x + (LAYOUT.TILE_WIDTH - rect.width) / 2
           trip.y = y + (LAYOUT.TILE_HEIGHT - rect.height) / 2
         if trip:
@@ -172,7 +172,7 @@ class Encounter(Layer):
         # myfont  = pygame.font.SysFont('SimHei',14)
         # text = myfont.render("%d" % col, True, (0,0,0))
         # t = Sprite()
-        # t.image = text
+        # t.surface = text
         # t.x = x + 2
         # t.y = y + 2
         # self.add(t)
@@ -208,7 +208,7 @@ class Strench(Layer):
     for i in [-1, 0, 1]:
       s = Sprite()
       image = pygame.image.load(IMAGE.STRENCH).convert_alpha()
-      s.image = image
+      s.surface = image
       imageRect = image.get_rect()
       s.x = LAYOUT.TILE_WIDTH / 2 + imageRect.width * i - imageRect.width / 2
       s.y = LAYOUT.TILE_HEIGHT - imageRect.height + (abs(i) - 1) * imageRect.height / 2
@@ -216,7 +216,7 @@ class Strench(Layer):
     t = Sprite()
     myfont = pygame.font.Font('freesansbold.ttf', 14)
     text = myfont.render('stench', True, (0,0,0))
-    t.image = text
+    t.surface = text
     rect = text.get_rect()
     t.x = (LAYOUT.TILE_WIDTH - rect.width) / 2
     t.y = LAYOUT.TILE_HEIGHT - rect.height
@@ -229,14 +229,14 @@ class Breeze(Layer):
     Layer.__init__(self)
     s = Sprite()
     image = pygame.image.load(IMAGE.BREEZE).convert_alpha()
-    s.image = image
+    s.surface = image
     imageRect = image.get_rect()
     s.x = (LAYOUT.TILE_WIDTH - imageRect.width) / 2
     s.y = 3
     t = Sprite()
     myfont = pygame.font.Font('freesansbold.ttf', 14)
     text = myfont.render('breeze', True, (0,0,0))
-    t.image = text
+    t.surface = text
     textRect = text.get_rect()
     t.x = (LAYOUT.TILE_WIDTH - textRect.width) / 2
     t.y = 10
@@ -291,22 +291,22 @@ class Scoreboard(Layer):
   def ready(self):
     title = Sprite()
     text = self._font.render('SCORE:',True, (0,0,0))
-    title.image = text
+    title.surface = text
     rect = text.get_rect()
     self.__score = Sprite()
     self.__score.x = rect.width
-    self.__score.image = self._font.render('%s' % self._score, True, (255,0,0))
+    self.__score.surface = self._font.render('%s' % self._score, True, (255,0,0))
     self.__win = Sprite()
-    self.__win.image = self._font.render("You win!", True, (255,0,0))
+    self.__win.surface = self._font.render("You win!", True, (255,0,0))
     self.__win.y = rect.height
     self.__lose = Sprite()
-    self.__lose.image = self._font.render("You lose!", True, (255,0,0))
+    self.__lose.surface = self._font.render("You lose!", True, (255,0,0))
     self.__lose.y = rect.height
     self.__restart = Sprite()
-    self.__restart.image = self._font.render("请按空格重新游戏", True, (255,0,0))
+    self.__restart.surface = self._font.render("请按空格重新游戏", True, (255,0,0))
     self.__restart.y = rect.height * 2
     tip = Sprite()
-    tip.image = self._font.render("使用方向键移动,空格射箭", True, (0,0,0))
+    tip.surface = self._font.render("使用方向键移动,空格射箭", True, (0,0,0))
     tip.y = rect.height * 3
     self.__win.visible = False
     self.__lose.visible = False
@@ -314,7 +314,7 @@ class Scoreboard(Layer):
     self.add(title, self.__score, self.__win, self.__lose, self.__restart, tip)
   def change(self, num):
     self._score += num
-    self.__score.image = self._font.render('%s' % self._score, True, (255,0,0))
+    self.__score.surface = self._font.render('%s' % self._score, True, (255,0,0))
     return self._score
   def win(self):
     self.__lose.visible = False
@@ -337,11 +337,11 @@ class Popup(Layer):
     bg.draw = lambda screen, x, y: pygame.draw.rect(screen, (235, 235, 235, 10), (x, y, LAYOUT.POPUP_WIDTH, LAYOUT.POPUP_HEIGHT))
     self._font = pygame.font.Font('freesansbold.ttf', 28)
     self.__win = Sprite()
-    self.__win.image = self._font.render("You win!", True, (255,0,0))
+    self.__win.surface = self._font.render("You win!", True, (255,0,0))
     self.__win.x = 80
     self.__win.y = 50
     self.__lose = Sprite()
-    self.__lose.image = self._font.render("You lose!", True, (255,0,0))
+    self.__lose.surface = self._font.render("You lose!", True, (255,0,0))
     self.__lose.x = 80
     self.__lose.y = 50
     self.add(bg, self.__win, self.__lose)
