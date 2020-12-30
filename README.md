@@ -52,13 +52,13 @@ src | 游戏源文件
 ## 游戏逻辑
 
 
-[游戏逻辑](./docs/logic.md)
+[点击查看游戏逻辑](./docs/logic.md)
 
 
 ## 游戏框架
 
 
-[游戏框架](./docs/frame.md)
+[点击查看游戏框架](./docs/frame.md)
 
 
 ## Q&A
