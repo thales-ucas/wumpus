@@ -400,4 +400,4 @@ def onMonsterDead(self, e):
 以上是所有程序逻辑，首先要整理真正的逻辑，然后想代码的逻辑，但是代码实现的时候要想很多逻辑之外的内容，主要是视觉方面
 
 
-![layer](./assets/layer.png)
+![layer](./assets/logic.png)
